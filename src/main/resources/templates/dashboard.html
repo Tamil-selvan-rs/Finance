@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head('Rose Finance Workspace')}"></head>
+<body class="app-page" data-theme="rose-finance" th:attr="data-initial-tab=${activeTab},data-has-field-errors=${fieldErrors != null and !#maps.isEmpty(fieldErrors)}">
+
+<!-- Ambient Free-Source Background Layer (Unsplash Image + Mixkit Animated Abstract Video) -->
+<div class="ambient-media-bg" aria-hidden="true">
+    <video class="ambient-bg-video" autoplay muted loop playsinline
+           poster="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&w=1920&q=80">
+        <source src="https://assets.mixkit.co/videos/preview/mixkit-abstract-purple-and-pink-waves-32568-large.mp4" type="video/mp4">
+    </video>
+    <div class="ambient-bg-overlay"></div>
+</div>
+
+<div class="app-layout">
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+    <aside class="sidebar" id="appSidebar">
+        <div class="sidebar-header">
+            <a class="brand" th:href="@{/dashboard}">
+                <span class="brand-mark">M</span><span class="brand-text">my<span class="brand-accent">finance</span></span>
+            </a>
+            <button type="button" class="hamburger-btn sidebar-toggle-inside" id="sidebarToggleBtn" aria-label="Toggle Navigation Menu" aria-expanded="true" title="Collapse / Expand Menu">
+                <span class="hamburger-lines">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </span>
+            </button>
+        </div>
+
+        <nav class="side-nav">
+            <button type="button" class="nav-item active" data-tab-target="ALL" title="Dashboard Overview">
+                <span class="nav-item-left"><span class="nav-icon">◫</span><span>Dashboard</span></span>
+                <span class="nav-pill" th:text="${#lists.size(items)}">0</span>
+            </button>
+            <button type="button" class="nav-item" data-tab-target="LEND" title="Lend">
+                <span class="nav-item-left"><span class="nav-icon">↗</span><span>Lend</span></span>
+                <span class="nav-pill" th:text="'₹' + ${tabTotals['LEND']}">₹0</span>
+            </button>
+            <button type="button" class="nav-item" data-tab-target="SPEND" title="Spend">
+                <span class="nav-item-left"><span class="nav-icon">↘</span><span>Spend</span></span>
+                <span class="nav-pill" th:text="'₹' + ${tabTotals['SPEND']}">₹0</span>
+            </button>
+            <button type="button" class="nav-item" data-tab-target="SALARY" title="Salary">
+                <span class="nav-item-left"><span class="nav-icon">₹</span><span>Salary</span></span>
+                <span class="nav-pill" th:text="'₹' + ${tabTotals['SALARY']}">₹0</span>
+            </button>
+            <button type="button" class="nav-item" data-tab-target="SAVINGS" title="Savings">
+                <span class="nav-item-left"><span class="nav-icon">❖</span><span>Savings</span></span>
+                <span class="nav-pill" th:text="'₹' + ${tabTotals['SAVINGS']}">₹0</span>
+            </button>
+            <button type="button" class="nav-item" data-tab-target="FINE" title="Fine">
+                <span class="nav-item-left"><span class="nav-icon">!</span><span>Fine</span></span>
+                <span class="nav-pill" th:text="'₹' + ${tabTotals['FINE']}">₹0</span>
+            </button>
+            <button type="button" class="nav-item" data-tab-target="BORROW" title="Borrow">
+                <span class="nav-item-left"><span class="nav-icon">↙</span><span>Borrow</span></span>
+                <span class="nav-pill" th:text="'₹' + ${tabTotals['BORROW']}">₹0</span>
+            </button>
+            <button type="button" class="nav-item" data-tab-target="EMI" title="EMI">
+                <span class="nav-item-left"><span class="nav-icon">▤</span><span>EMI</span></span>
+                <span class="nav-pill" th:text="'₹' + ${tabTotals['EMI']}">₹0</span>
+            </button>
+            <button type="button" class="nav-item" data-tab-target="LOAN" title="Loan">
+                <span class="nav-item-left"><span class="nav-icon">◈</span><span>Loan</span></span>
+                <span class="nav-pill" th:text="'₹' + ${tabTotals['LOAN']}">₹0</span>
+            </button>
+            <button type="button" class="nav-item" data-tab-target="VAULT" title="Password Vault">
+                <span class="nav-item-left"><span class="nav-icon">🔐</span><span>Password Vault</span></span>
+                <span class="nav-pill" th:text="${#lists.size(vaultItems)}">0</span>
+            </button>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <form th:action="@{/logout}" method="post">
+                <button class="nav-item signout" type="submit" title="Sign out">
+                    <span class="nav-item-left"><span class="nav-icon">↪</span><span>Sign out</span></span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="topbar-title-group">
+                <button type="button" class="hamburger-btn mobile-drawer-btn" id="mobileSidebarOpenBtn" aria-label="Open Navigation Menu" title="Open Menu">
+                    <span class="hamburger-lines">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                </button>
+                <div>
+                    <span class="eyebrow">ROSE FINANCE · ANALYTICS &amp; VAULT</span>
+                    <h1>Welcome back, <span th:text="${fullName}">Member</span></h1>
+                </div>
+            </div>
+            <div class="topbar-controls">
+                <button type="button" class="btn btn-primary btn-sm" id="openFinanceModalBtn" data-open-modal="financeModal">
+                    <span>＋</span> <span id="openFinanceModalLabel">Add Entry</span>
+                </button>
+                <div class="profile-chip">
+                    <span class="avatar" th:text="${initials}">MF</span>
+                    <span class="profile-name" th:text="${userEmail}">member@myfinance.com</span>
+                    <span class="status-dot"></span>
+                </div>
+            </div>
+        </header>
+
+        <div class="notice" th:if="${successMessage}" th:text="${successMessage}"></div>
+        <div class="notice" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+        <!-- Clean RosePay-Style Hero Summary Strip (Total Balance, Income, Expenses, Savings Goal) -->
+        <section class="hero-summary-grid reveal" id="heroSummaryStrip">
+            <article class="hero-balance-card">
+                <div class="hero-card-copy">
+                    <span class="eyebrow">TOTAL ACTIVE VOLUME</span>
+                    <div class="hero-balance-val" id="heroTotalBalance">₹ 0.00</div>
+                    <div class="hero-sub-row">
+                        <span class="trend-pill up">↗ Pending: ₹ <strong th:text="${totalPending}">0.00</strong></span>
+                        <span class="trend-pill settled">✓ Settled: ₹ <strong th:text="${totalPaid}">0.00</strong></span>
+                    </div>
+                </div>
+                <div class="hero-visual-orb" aria-hidden="true">
+                    <div class="orb-ring"></div>
+                    <span class="orb-symbol">₹</span>
+                </div>
+            </article>
+
+            <article class="hero-kpi-card" data-tab-target="SALARY">
+                <div class="kpi-icon-circle income">↑</div>
+                <div>
+                    <span class="kpi-title">Salary &amp; Income</span>
+                    <div class="kpi-num" th:text="'₹ ' + ${tabTotals['SALARY']}">₹ 0.00</div>
+                </div>
+            </article>
+
+            <article class="hero-kpi-card" data-tab-target="SPEND">
+                <div class="kpi-icon-circle expense">↓</div>
+                <div>
+                    <span class="kpi-title">Expenses &amp; Spend</span>
+                    <div class="kpi-num" th:text="'₹ ' + ${tabTotals['SPEND']}">₹ 0.00</div>
+                </div>
+            </article>
+
+            <article class="hero-goal-card" data-tab-target="SAVINGS">
+                <div class="goal-head">
+                    <span>Savings Reserve</span>
+                    <strong id="savingsRatioText">0%</strong>
+                </div>
+                <div class="goal-amount" th:text="'₹ ' + ${tabTotals['SAVINGS']}">₹ 0.00</div>
+                <div class="goal-bar-track">
+                    <div class="goal-bar-fill" id="savingsProgressBar" style="width: 0%;"></div>
+                </div>
+            </article>
+        </section>
+
+        <!-- Hidden data carrier for all 8 modules so charts stay 100% synced -->
+        <div style="display:none;" aria-hidden="true">
+            <span class="chart-data-node" data-tab-target="LEND" th:attr="data-chart-val=${tabTotals['LEND']}"></span>
+            <span class="chart-data-node" data-tab-target="SPEND" th:attr="data-chart-val=${tabTotals['SPEND']}"></span>
+            <span class="chart-data-node" data-tab-target="SALARY" th:attr="data-chart-val=${tabTotals['SALARY']}"></span>
+            <span class="chart-data-node" data-tab-target="SAVINGS" th:attr="data-chart-val=${tabTotals['SAVINGS']}"></span>
+            <span class="chart-data-node" data-tab-target="FINE" th:attr="data-chart-val=${tabTotals['FINE']}"></span>
+            <span class="chart-data-node" data-tab-target="BORROW" th:attr="data-chart-val=${tabTotals['BORROW']}"></span>
+            <span class="chart-data-node" data-tab-target="EMI" th:attr="data-chart-val=${tabTotals['EMI']}"></span>
+            <span class="chart-data-node" data-tab-target="LOAN" th:attr="data-chart-val=${tabTotals['LOAN']}"></span>
+        </div>
+
+        <!-- ANALYTICS SECTION: MATCHING BAR GRAPH & FIXED SVG PIE CHART -->
+        <section class="analytics-grid reveal" id="analyticsSection">
+            <article class="surface-card chart-card">
+                <div class="card-heading">
+                    <div>
+                        <span class="eyebrow">CATEGORY ANALYTICS</span>
+                        <h3>Finance Module Graph</h3>
+                    </div>
+                    <span class="badge" id="barChartTotalBadge">Total: ₹ 0.00</span>
+                </div>
+                <div class="bar-chart-wrap" id="financeBarChart" aria-label="Finance category bar graph"></div>
+            </article>
+
+            <article class="surface-card chart-card">
+                <div class="card-heading">
+                    <div>
+                        <span class="eyebrow">PORTFOLIO SPLIT</span>
+                        <h3>Allocation Pie Chart</h3>
+                    </div>
+                    <span class="card-symbol">◔</span>
+                </div>
+                <div class="pie-chart-layout">
+                    <div class="pie-svg-wrap" id="financePieChart"></div>
+                    <div class="pie-legend-list" id="financePieLegend"></div>
+                </div>
+            </article>
+        </section>
+
+        <!-- SECTION A: FINANCE WORKSPACE (FULL-WIDTH LEDGER + CENTERED POPUP MODAL) -->
+        <section class="workspace-single reveal" id="financeWorkspace">
+            <article class="surface-card">
+                <div class="card-heading">
+                    <div>
+                        <span class="eyebrow">TRANSACTION &amp; DUE LEDGER</span>
+                        <h3 id="dynamicLedgerTitle">All Finance Records</h3>
+                    </div>
+                    <span class="badge" th:text="${#lists.size(items)} + ' Total Records'">0 Total Records</span>
+                </div>
+                <div class="table-wrap">
+                    <table class="finance-table">
+                        <colgroup>
+                            <col class="col-tab">
+                            <col class="col-title">
+                            <col class="col-amount">
+                            <col class="col-date">
+                            <col class="col-receipt">
+                            <col class="col-status">
+                            <col class="col-actions">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th class="col-tab">Category</th>
+                                <th class="col-title">Title &amp; Counterparty</th>
+                                <th class="col-amount num-col">Amount</th>
+                                <th class="col-date center-col">Due Date</th>
+                                <th class="col-receipt center-col">Receipt</th>
+                                <th class="col-status center-col">Status</th>
+                                <th class="col-actions right-col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="item : ${items}" class="finance-row" th:attr="data-item-type=${item.itemType}">
+                                <td class="col-tab">
+                                    <span class="badge badge-type" th:text="${item.itemType}">EMI</span>
+                                </td>
+                                <td class="col-title">
+                                    <div class="row-title-stack">
+                                        <span class="row-primary-text" th:text="${item.title}">Title</span>
+                                        <span class="row-secondary-text" th:text="${item.category}">Counterparty</span>
+                                    </div>
+                                </td>
+                                <td class="col-amount num-col">
+                                    <span class="amount-cell" th:text="'₹ ' + ${#numbers.formatDecimal(item.amount, 1, 'COMMA', 2, 'POINT')}">₹ 0.00</span>
+                                </td>
+                                <td class="col-date center-col">
+                                    <span class="date-cell" th:text="${item.dueDate != null ? #temporals.format(item.dueDate, 'dd-MM-yyyy') : '—'}">—</span>
+                                </td>
+                                <td class="col-receipt center-col">
+                                    <a th:if="${item.attachmentUrl != null}" th:href="@{${item.attachmentUrl}}" target="_blank" title="View full image" class="receipt-link">
+                                        <img th:src="@{${item.attachmentUrl}}" alt="Receipt" class="receipt-thumb">
+                                    </a>
+                                    <span th:if="${item.attachmentUrl == null}" class="muted-dash">—</span>
+                                </td>
+                                <td class="col-status center-col">
+                                    <span class="badge badge-status" th:classappend="${item.status == 'PAID' or item.status == 'RECEIVED'} ? 'badge-paid' : ''" th:text="${item.status}">PENDING</span>
+                                </td>
+                                <td class="col-actions right-col">
+                                    <div class="row-actions-group">
+                                        <button type="button" class="btn btn-outline row-action-btn edit-finance-btn"
+                                                th:attr="data-id=${item.id},
+                                                         data-item-type=${item.itemType},
+                                                         data-title=${item.title},
+                                                         data-category=${item.category},
+                                                         data-amount=${item.amount},
+                                                         data-due-date=${item.dueDate != null ? #temporals.format(item.dueDate, 'dd-MM-yyyy') : ''},
+                                                         data-status=${item.status},
+                                                         data-notes=${item.notes != null ? item.notes : ''}">
+                                            Edit
+                                        </button>
+                                        <form th:if="${item.status != 'PAID'}" th:action="@{'/dashboard/items/' + ${item.id} + '/pay'}" method="post" class="inline-action-form">
+                                            <input type="hidden" name="tab" th:value="${item.itemType}">
+                                            <button type="submit" class="btn btn-outline row-action-btn">Mark Paid</button>
+                                        </form>
+                                        <form th:action="@{'/dashboard/items/' + ${item.id} + '/remind'}" method="post" class="inline-action-form">
+                                            <input type="hidden" name="tab" th:value="${item.itemType}">
+                                            <button type="submit" class="btn btn-outline row-action-btn">Email Now</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr id="emptyFilterRow" style="display:none;">
+                                <td colspan="7" class="empty-table-cell">No records in this category yet. Click <strong>＋ Add Entry</strong> at the top right to create one.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+
+        <!-- SECTION B: SEPARATE APPLICATION CREDENTIAL VAULT TAB -->
+        <section class="workspace-single reveal hidden-section" id="vaultWorkspace">
+            <article class="surface-card">
+                <div class="card-heading">
+                    <div>
+                        <span class="eyebrow">AES-256-GCM ENCRYPTED</span>
+                        <h3>Saved Application Usernames &amp; Passwords</h3>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                        <span class="badge" th:text="${#lists.size(vaultItems)} + ' Saved Logins'">0 Saved Logins</span>
+                        <button type="button" class="btn btn-primary btn-sm" data-open-modal="vaultModal">
+                            <span>＋</span> <span>Add Login</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table class="finance-table">
+                        <thead>
+                            <tr>
+                                <th>Application Title</th>
+                                <th class="center-col">Category</th>
+                                <th>Username / Login ID</th>
+                                <th>Password (View / Copy)</th>
+                                <th class="right-col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(vaultItems)}">
+                                <td colspan="5" class="empty-table-cell">No application credentials saved yet. Click <strong>＋ Add Login</strong> above to save one.</td>
+                            </tr>
+                            <tr th:each="v : ${vaultItems}">
+                                <td>
+                                    <div class="row-title-stack">
+                                        <span class="row-primary-text" th:text="${v.appTitle}">HDFC NetBanking</span>
+                                        <a th:if="${v.appUrl != null}" th:href="${v.appUrl}" target="_blank" class="row-link-text" th:text="${v.appUrl}">https://...</a>
+                                    </div>
+                                </td>
+                                <td class="center-col"><span class="badge badge-type" th:text="${v.category}">BANKING</span></td>
+                                <td>
+                                    <div class="secret-box">
+                                        <span class="secret-text" th:text="${v.loginUsername}">user@domain.com</span>
+                                        <button type="button" class="vault-action-btn copy-secret-btn" th:attr="data-copy-value=${v.loginUsername}">Copy</button>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="secret-box">
+                                        <span class="secret-text" th:id="'pwd-' + ${v.id}" data-masked="true" th:attr="data-real-secret=${v.plainPassword}">••••••••••••</span>
+                                        <button type="button" class="vault-action-btn toggle-secret-btn" th:attr="data-secret-id='pwd-' + ${v.id}">Show</button>
+                                        <button type="button" class="vault-action-btn copy-secret-btn" th:attr="data-copy-value=${v.plainPassword}">Copy</button>
+                                    </div>
+                                </td>
+                                <td class="right-col">
+                                    <div class="row-actions-group">
+                                        <form th:action="@{'/dashboard/vault/' + ${v.id} + '/delete'}" method="post" class="inline-action-form">
+                                            <button type="submit" class="btn btn-outline row-action-btn">Delete</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+    </main>
+</div>
+
+<!-- TRUE VIEWPORT-CENTERED HORIZONTAL MODAL: ADD / EDIT FINANCE ENTRY -->
+<div class="modal-backdrop" id="financeModal" role="dialog" aria-modal="true" aria-labelledby="dynamicFormTitle">
+    <article class="surface-card modal-dialog modal-dialog-wide">
+        <div class="card-heading">
+            <div>
+                <span class="eyebrow">VALIDATED FINANCE ENTRY</span>
+                <h3 id="dynamicFormTitle">Add Financial Entry</h3>
+            </div>
+            <button type="button" class="modal-close-btn" data-close-modal="financeModal" aria-label="Close popup">✕</button>
+        </div>
+        <form id="financeItemForm" th:action="@{/dashboard/items}" th:object="${newItem}" method="post" enctype="multipart/form-data" novalidate>
+            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="modal-grid-2col">
+                <div class="modal-col-stack">
+                    <div>
+                        <label class="field-label" for="itemType">Category / Module *</label>
+                        <select id="itemType" name="itemType" style="display:none;">
+                            <option value="LEND">LEND (Money Given)</option>
+                            <option value="SPEND">SPEND (Expense)</option>
+                            <option value="SALARY">SALARY (Income Credit)</option>
+                            <option value="SAVINGS">SAVINGS (Reserve &amp; Goals)</option>
+                            <option value="FINE">FINE (Penalty / Challan)</option>
+                            <option value="BORROW">BORROW (Money Taken)</option>
+                            <option value="EMI">EMI (Monthly Installment)</option>
+                            <option value="LOAN">LOAN (Bank / Personal Loan)</option>
+                        </select>
+                        <div class="custom-select-wrapper" data-target-select="itemType">
+                            <div class="custom-select-trigger" tabindex="0" role="combobox" aria-expanded="false">
+                                <div class="trigger-left">
+                                    <span class="option-badge-icon" data-trigger-icon>↗</span>
+                                    <span data-trigger-label>LEND (Money Given)</span>
+                                </div>
+                                <span class="trigger-chevron">▼</span>
+                            </div>
+                            <div class="custom-select-menu" role="listbox">
+                                <div class="custom-option" data-value="LEND" data-icon="↗">
+                                    <div class="trigger-left"><span class="option-badge-icon">↗</span><span>LEND (Money Given)</span></div>
+                                    <span class="option-check">✓</span>
+                                </div>
+                                <div class="custom-option" data-value="SPEND" data-icon="↘">
+                                    <div class="trigger-left"><span class="option-badge-icon">↘</span><span>SPEND (Expense)</span></div>
+                                    <span class="option-check">✓</span>
+                                </div>
+                                <div class="custom-option" data-value="SALARY" data-icon="₹">
+                                    <div class="trigger-left"><span class="option-badge-icon">₹</span><span>SALARY (Income Credit)</span></div>
+                                    <span class="option-check">✓</span>
+                                </div>
+                                <div class="custom-option" data-value="SAVINGS" data-icon="❖">
+                                    <div class="trigger-left"><span class="option-badge-icon">❖</span><span>SAVINGS (Reserve &amp; Goals)</span></div>
+                                    <span class="option-check">✓</span>
+                                </div>
+                                <div class="custom-option" data-value="FINE" data-icon="!">
+                                    <div class="trigger-left"><span class="option-badge-icon">!</span><span>FINE (Penalty / Challan)</span></div>
+                                    <span class="option-check">✓</span>
+                                </div>
+                                <div class="custom-option" data-value="BORROW" data-icon="↙">
+                                    <div class="trigger-left"><span class="option-badge-icon">↙</span><span>BORROW (Money Taken)</span></div>
+                                    <span class="option-check">✓</span>
+                                </div>
+                                <div class="custom-option" data-value="EMI" data-icon="▤">
+                                    <div class="trigger-left"><span class="option-badge-icon">▤</span><span>EMI (Monthly Installment)</span></div>
+                                    <span class="option-check">✓</span>
+                                </div>
+                                <div class="custom-option" data-value="LOAN" data-icon="◈">
+                                    <div class="trigger-left"><span class="option-badge-icon">◈</span><span>LOAN (Bank / Personal Loan)</span></div>
+                                    <span class="option-check">✓</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="field-label" for="title">Title / Description *</label>
+                        <input class="input" type="text" id="title" th:field="*{title}" placeholder="Enter title or description" required>
+                        <small class="field-error" th:if="${fieldErrors != null and fieldErrors['title'] != null}" th:text="${fieldErrors['title']}"></small>
+                    </div>
+
+                    <div>
+                        <label class="field-label" for="category">Person / Bank / Category *</label>
+                        <input class="input" type="text" id="category" th:field="*{category}" placeholder="e.g., HDFC Bank, Karthik, Emergency Fund" required>
+                        <small class="field-error" th:if="${fieldErrors != null and fieldErrors['category'] != null}" th:text="${fieldErrors['category']}"></small>
+                    </div>
+
+                    <div class="modal-subgrid-2">
+                        <div>
+                            <label class="field-label" for="amount">Amount (₹) *</label>
+                            <input class="input" type="number" step="0.01" min="0.01" id="amount" th:field="*{amount}" placeholder="0.00" required>
+                            <small class="field-error" th:if="${fieldErrors != null and fieldErrors['amount'] != null}" th:text="${fieldErrors['amount']}"></small>
+                        </div>
+                        <div>
+                            <label class="field-label" for="dueDateDisplay">Due Date <span class="optional">OPTIONAL</span></label>
+                            <input class="input" type="text" id="dueDateDisplay" placeholder="dd-mm-yyyy" maxlength="10" autocomplete="off" inputmode="numeric">
+                            <input type="hidden" id="dueDate" name="dueDate">
+                            <small class="field-error" th:if="${fieldErrors != null and fieldErrors['dueDate'] != null}" th:text="${fieldErrors['dueDate']}"></small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-col-stack">
+                    <div>
+                        <label class="field-label" for="attachmentInput">Receipt / Proof Image <span class="optional">OPTIONAL • MAX 5MB</span></label>
+                        <input type="file" id="attachmentInput" name="attachment" accept="image/jpeg,image/png,image/webp" style="display:none;">
+                        <div class="file-dropzone file-dropzone-compact" id="receiptDropzone" tabindex="0" role="button" aria-label="Upload receipt image">
+                            <div class="dropzone-icon-wrap">⬆</div>
+                            <div>
+                                <span class="dropzone-title">Drop receipt or <span>browse file</span></span>
+                                <span class="dropzone-sub">JPEG, PNG, WEBP up to 5MB</span>
+                            </div>
+                        </div>
+                        <div id="imagePreviewBox"></div>
+                    </div>
+
+                    <div id="editStatusGroup" style="display:none;">
+                        <label class="field-label" for="statusSelect">Payment / Record Status</label>
+                        <select class="input" id="statusSelect" name="status">
+                            <option value="PENDING">PENDING</option>
+                            <option value="PAID">PAID</option>
+                            <option value="OVERDUE">OVERDUE</option>
+                            <option value="RECEIVED">RECEIVED</option>
+                        </select>
+                    </div>
+
+                    <div style="flex:1;display:flex;flex-direction:column;">
+                        <label class="field-label" for="notes">Notes <span class="optional">OPTIONAL</span></label>
+                        <textarea class="input" id="notes" th:field="*{notes}" placeholder="Reference number, interest rate, or remarks" style="flex:1;min-height:86px;"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer-actions">
+                <button type="button" class="btn btn-outline" data-close-modal="financeModal">Cancel</button>
+                <button class="btn btn-primary" type="submit"><span id="financeSubmitLabel">Save Entry &amp; Arm Due Alert</span> <span>↗</span></button>
+            </div>
+        </form>
+    </article>
+</div>
+
+<!-- TRUE VIEWPORT-CENTERED HORIZONTAL MODAL: CREDENTIAL VAULT -->
+<div class="modal-backdrop" id="vaultModal" role="dialog" aria-modal="true" aria-labelledby="vaultModalTitle">
+    <article class="surface-card modal-dialog modal-dialog-wide">
+        <div class="card-heading">
+            <div>
+                <span class="eyebrow">AES-256-GCM ENCRYPTED</span>
+                <h3 id="vaultModalTitle">Save Web / App Login</h3>
+            </div>
+            <button type="button" class="modal-close-btn" data-close-modal="vaultModal" aria-label="Close popup">✕</button>
+        </div>
+        <form id="vaultItemForm" th:action="@{/dashboard/vault}" th:object="${newVault}" method="post" novalidate>
+            <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="modal-grid-2col">
+                <div class="modal-col-stack">
+                    <div>
+                        <label class="field-label" for="appTitle">Application / Website Title *</label>
+                        <input class="input" type="text" id="appTitle" th:field="*{appTitle}" placeholder="e.g., HDFC NetBanking, Zerodha Kite, AWS Console" required>
+                    </div>
+                    <div>
+                        <label class="field-label" for="appUrl">Website URL <span class="optional">OPTIONAL</span></label>
+                        <input class="input" type="text" id="appUrl" th:field="*{appUrl}" placeholder="https://netbanking.hdfcbank.com">
+                    </div>
+                    <div>
+                        <label class="field-label" for="loginUsername">Username / Login ID / Email *</label>
+                        <input class="input" type="text" id="loginUsername" th:field="*{loginUsername}" placeholder="Enter your username or customer ID" required>
+                    </div>
+                </div>
+
+                <div class="modal-col-stack">
+                    <div>
+                        <label class="field-label" for="vaultPassword">Password *</label>
+                        <input class="input" type="password" id="vaultPassword" th:field="*{password}" placeholder="Enter password to encrypt" required>
+                    </div>
+                    <div>
+                        <label class="field-label" for="vaultCategory">Vault Category</label>
+                        <select id="vaultCategory" th:field="*{category}" style="display:none;">
+                            <option value="BANKING">Banking &amp; Cards</option>
+                            <option value="INVESTMENT">Trading &amp; Demat</option>
+                            <option value="WORK">Enterprise &amp; Cloud</option>
+                            <option value="PERSONAL">Personal &amp; Social</option>
+                        </select>
+                        <div class="custom-select-wrapper" data-target-select="vaultCategory">
+                            <div class="custom-select-trigger" tabindex="0" role="combobox" aria-expanded="false">
+                                <div class="trigger-left">
+                                    <span class="option-badge-icon" data-trigger-icon>🏦</span>
+                                    <span data-trigger-label>Banking &amp; Cards</span>
+                                </div>
+                                <span class="trigger-chevron">▼</span>
+                            </div>
+                            <div class="custom-select-menu" role="listbox">
+                                <div class="custom-option selected" data-value="BANKING" data-icon="🏦">
+                                    <div class="trigger-left"><span class="option-badge-icon">🏦</span><span>Banking &amp; Cards</span></div>
+                                    <span class="option-check">✓</span>
+                                </div>
+                                <div class="custom-option" data-value="INVESTMENT" data-icon="📈">
+                                    <div class="trigger-left"><span class="option-badge-icon">📈</span><span>Trading &amp; Demat</span></div>
+                                    <span class="option-check">✓</span>
+                                </div>
+                                <div class="custom-option" data-value="WORK" data-icon="☁">
+                                    <div class="trigger-left"><span class="option-badge-icon">☁</span><span>Enterprise &amp; Cloud</span></div>
+                                    <span class="option-check">✓</span>
+                                </div>
+                                <div class="custom-option" data-value="PERSONAL" data-icon="👤">
+                                    <div class="trigger-left"><span class="option-badge-icon">👤</span><span>Personal &amp; Social</span></div>
+                                    <span class="option-check">✓</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="field-label" for="vaultNotes">Security Notes <span class="optional">OPTIONAL</span></label>
+                        <textarea class="input" id="vaultNotes" th:field="*{notes}" placeholder="MPIN hint, security question, or customer ID note"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer-actions">
+                <button type="button" class="btn btn-outline" data-close-modal="vaultModal">Cancel</button>
+                <button class="btn btn-primary" type="submit">Encrypt &amp; Save Credentials <span>🔒</span></button>
+            </div>
+        </form>
+    </article>
+</div>
+
+<script th:src="@{/assets/js/app.js}"></script>
+</body>
+</html>

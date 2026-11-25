@@ -1,0 +1,20 @@
+CREATE TABLE finance_items (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    title VARCHAR(120) NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    item_type VARCHAR(20) NOT NULL,
+    amount DECIMAL(15, 2) NOT NULL,
+    due_date DATE NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    notes VARCHAR(500),
+    attachment_path VARCHAR(255),
+    attachment_original_name VARCHAR(255),
+    reminder_sent BOOLEAN NOT NULL DEFAULT FALSE,
+    last_reminded_at TIMESTAMP NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_finance_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_finance_user_due (user_id, due_date),
+    INDEX idx_finance_due_status (due_date, status, reminder_sent)
+);

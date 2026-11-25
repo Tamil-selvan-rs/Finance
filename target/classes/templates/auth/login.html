@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Sign in')}"></head>
+<body class="auth-page">
+<div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+<main class="auth-shell reveal">
+    <a class="brand brand-centered" th:href="@{/login}">
+        <span class="brand-mark">M</span><span>my<span class="brand-accent">finance</span></span>
+    </a>
+    <div class="auth-heading">
+        <span class="eyebrow">YOUR MONEY. IN FOCUS.</span>
+        <h1>Welcome <span>back.</span></h1>
+        <p>Sign in using your Email, Username, or Mobile Number.</p>
+    </div>
+    <div class="notice" th:if="${param.registered}">Your account is ready. Sign in to continue.</div>
+    <div class="notice" th:if="${param.error}">Invalid credentials. Check your email/username/mobile and password.</div>
+    <div class="notice" th:if="${param.logout}">You have been securely signed out.</div>
+
+    <div id="cachedAccountBanner" class="cached-login-chip" style="display:none;">
+        <div>
+            <small style="color:#F472B6;display:block;font-size:10px;letter-spacing:0.8px;">SAVED LOCAL CACHE</small>
+            <strong id="cachedAccountLabel" style="font-size:12.5px;">user</strong>
+        </div>
+        <button type="button" id="clearLocalCacheBtn" class="vault-action-btn">Clear</button>
+    </div>
+
+    <form id="loginForm" th:action="@{/login}" method="post" class="form-stack">
+        <label class="field-label" for="username">Email, Username, or Mobile Number *</label>
+        <input class="input" id="username" name="username" type="text" placeholder="email@domain.com / username / +919876543210" autocomplete="username" required>
+
+        <label class="field-label" for="password">Password *</label>
+        <div style="position:relative;">
+            <input class="input" id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required style="padding-right:64px;">
+            <button type="button" id="toggleLoginPwdBtn" class="vault-action-btn" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);">Show</button>
+        </div>
+
+        <label class="remember-cache-row">
+            <input type="checkbox" id="rememberLocalCache" checked>
+            <span>Remember username &amp; password in encrypted local cache</span>
+        </label>
+
+        <button class="btn btn-primary btn-full" type="submit">Sign in <span aria-hidden="true">↗</span></button>
+    </form>
+    <p class="auth-foot">New to MyFinance? <a th:href="@{/register}">Create an account</a></p>
+    <p class="secure-note"><span class="secure-dot"></span> Protected with BCrypt &amp; WebCrypto local cache</p>
+</main>
+<script th:src="@{/assets/js/app.js}"></script>
+</body>
+</html>

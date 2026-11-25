@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Create account')}"></head>
+<body class="auth-page">
+<div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+<main class="auth-shell auth-shell-wide reveal">
+    <a class="brand brand-centered" th:href="@{/login}">
+        <span class="brand-mark">M</span><span>my<span class="brand-accent">finance</span></span>
+    </a>
+    <div class="auth-heading">
+        <span class="eyebrow">A CLEARER FINANCIAL PICTURE</span>
+        <h1>Make money <span>make sense.</span></h1>
+        <p>Create your private workspace. Sign in anytime with Email, Username, or Mobile.</p>
+    </div>
+    <div class="notice" th:if="${registrationError}" th:text="${registrationError}"></div>
+    <form th:action="@{/register}" th:object="${registrationRequest}" method="post" class="form-stack">
+        <div>
+            <label class="field-label" for="fullName">Full name *</label>
+            <input class="input" id="fullName" th:field="*{fullName}" placeholder="Your full name" autocomplete="name" required>
+            <small class="field-error" th:errors="*{fullName}"></small>
+        </div>
+        <div>
+            <label class="field-label" for="username">Username <span class="optional">OPTIONAL • FOR QUICK LOGIN</span></label>
+            <input class="input" id="username" th:field="*{username}" placeholder="e.g., tamilselvan_rs" autocomplete="username">
+            <small class="field-error" th:errors="*{username}"></small>
+        </div>
+        <div>
+            <label class="field-label" for="email">Email address *</label>
+            <input class="input" id="email" type="email" th:field="*{email}" placeholder="you@example.com" autocomplete="email" required>
+            <small class="field-error" th:errors="*{email}"></small>
+        </div>
+        <div>
+            <label class="field-label" for="phone">Mobile Number <span class="optional">OPTIONAL • FOR MOBILE LOGIN</span></label>
+            <input class="input" id="phone" th:field="*{phone}" placeholder="+919876543210" autocomplete="tel">
+            <small class="field-error" th:errors="*{phone}"></small>
+        </div>
+        <div>
+            <label class="field-label" for="password">Create password *</label>
+            <input class="input" id="password" type="password" th:field="*{password}" placeholder="Min 8 chars with A-Z, a-z, 0-9 & symbol" autocomplete="new-password" required>
+            <small class="field-error" th:errors="*{password}"></small>
+        </div>
+        <button class="btn btn-primary btn-full" type="submit">Create account <span aria-hidden="true">↗</span></button>
+    </form>
+    <p class="auth-foot">Already have an account? <a th:href="@{/login}">Sign in</a></p>
+    <p class="secure-note"><span class="secure-dot"></span> Your password is hashed before it is stored</p>
+</main>
+<script th:src="@{/assets/js/app.js}"></script>
+</body>
+</html>
